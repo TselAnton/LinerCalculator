@@ -1,7 +1,6 @@
-from api.input_parser import Parser, ParserException
-from api.simplex_method import find_solution
+from api.parser import Parser, ParserException
 
 try:
-    Parser.parse_function(" -50 * x1 + x2", 5)
+    pass
 except ParserException as ex:
     print(ex.get_message())
