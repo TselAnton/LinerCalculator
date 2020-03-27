@@ -1,5 +1,8 @@
 class Parser:
-
+    """
+    Парсер входных функций
+    :author Kuvshinova Evgenia
+    """
     # Константы границ
     __LESS = "<"
     __LESS_OR_EQUAL = "<="
@@ -36,25 +39,26 @@ class Parser:
 
     # Таблица состояний (КА)
     __STATES = [
-        [   1,    2, 'US', 'US',    5, 'UF'],     # 0 — Вход в конечный автомат
-        ['US',    2, 'US', 'US',    5, 'UF'],     # 1 — Знак перед числом (+/-)
-        ['US',    2,    3,    4,    5, 'EP'],     # 2 — Ввод числа
-        ['US',    2, 'US', 'US', 'US', 'UF'],     # 3 — Ввод точки в числе перед иксом
-        ['US', 'US', 'US', 'US',    5, 'UF'],     # 4 — Ввод умножения
-        ['US',    6, 'US', 'US', 'US', 'UF'],     # 5 — Ввод икса
-        [   0,    6, 'US', 'US', 'US', 'EP']      # 6 — Ввод номера икса
+        [1, 2, 'US', 'US', 5, 'UF'],        # 0 — Вход в конечный автомат
+        ['US', 2, 'US', 'US', 5, 'UF'],     # 1 — Знак перед числом (+/-)
+        ['US', 2, 3, 4, 5, 'EP'],           # 2 — Ввод числа
+        ['US', 2, 'US', 'US', 'US', 'UF'],  # 3 — Ввод точки в числе перед иксом
+        ['US', 'US', 'US', 'US', 5, 'UF'],  # 4 — Ввод умножения
+        ['US', 6, 'US', 'US', 'US', 'UF'],  # 5 — Ввод икса
+        [0, 6, 'US', 'US', 'US', 'EP']      # 6 — Ввод номера икса
     ]
 
-    """
-    Парсить функию с граничными условиями
-    Пример: 2*x1 + 3*x2 >= 100
-    Пример: 2*x1 + 3*x2 = 4*x3
-    
-    str_func — Функция в виде строки
-    const_count — Количество констант X
-    """
     @staticmethod
     def parse_function_with_borders(str_func, const_count):
+        """
+        Парсить функию с граничными условиями
+                Пример: 2*x1 + 3*x2 >= 100
+                Пример: 2*x1 + 3*x2 = 4*x3
+        :param str_func: Функция в виде строки
+        :param const_count: Количество используемых констант
+        :return: Массив векторов коэффициентов для левой и правой части,
+        массив свободных членов для левой и правой части
+        """
         str_func = str_func.replace(" ", "")
 
         # Проверяем, есть ли граничные условия
@@ -69,40 +73,43 @@ class Parser:
 
         return [left_cof, right_cof], [left_free_cof, right_free_cof], border
 
-    """
-    Парсить функию без граничных условий
-    Пример: 2*x1 + 3*x2
-    Пример: 2*x1 + 3*x2 - 4*x3
-    
-    str_func — Функция в виде строки
-    const_count — Количество констант X
-    """
     @staticmethod
     def parse_alone_function(str_func, const_count):
+        """
+        Парсить функию без граничных условий
+                Пример: 2*x1 + 3*x2
+                Пример: 2*x1 + 3*x2 - 4*x3
+        :param str_func: Функция в виде строки
+        :param const_count: Количество используемых констант
+        :return: Вектор коэффициентов, свободный член
+        """
         str_func = str_func.replace(" ", "")
         return Parser.__parse_side_of_function(str_func, const_count)
 
-    """
-    Парсинг одной части
-    """
     @staticmethod
     def __parse_side_of_function(str_func, const_count):
-        before_state = 0   # Предыдущее состояние
-        new_state = 0   # Следующее состояние
+        """
+        Парсинг одной части функции
+        :param str_func: Часть функции в виде строки
+        :param const_count: Количество используемых констант
+        :return: Вектор коэффициентов, свободный член
+        """
+        before_state = 0  # Предыдущее состояние
+        new_state = 0  # Следующее состояние
 
         cof_array = [0 in range(len(const_count))]  # Массив коэффициентов
-        free_cof = None   # Свободный коэффициент
+        free_cof = None  # Свободный коэффициент
 
-        buffer = None   # Буффер для значений
-        buffered_cof = None     # Последний сохранённый коэффициент
+        buffer = None  # Буффер для значений
+        buffered_cof = None  # Последний сохранённый коэффициент
 
         for i in range(len(str_func)):  # Читаем строку посимвольно
             current_char = str_func[i]  # Берём текущую строку
 
-            if Parser.__SYMBOLS.__contains__(current_char):       # Если в таблице символов данный символ поддерживается
-                new_state = Parser.__STATES[before_state][Parser.__SYMBOLS[current_char]]   # Берём новое состояние
+            if Parser.__SYMBOLS.__contains__(current_char):  # Если в таблице символов данный символ поддерживается
+                new_state = Parser.__STATES[before_state][Parser.__SYMBOLS[current_char]]  # Берём новое состояние
 
-                if new_state == "US":   # Если мы перешли в неправильное состояние, выдаём ошибку
+                if new_state == "US":  # Если мы перешли в неправильное состояние, выдаём ошибку
                     raise ParserException(Parser.__EXCEPTIONS["US"].format(current_char))
 
                 # Если мы записывали всё это время число
@@ -120,9 +127,9 @@ class Parser:
                     buffered_cof = None
                     buffer = None
             else:
-                raise ParserException(Parser.__EXCEPTIONS["UC"].format(current_char))     # Иначе вызываем ошибку
+                raise ParserException(Parser.__EXCEPTIONS["UC"].format(current_char))  # Иначе вызываем ошибку
 
-            before_state = new_state    # Обновляем предыдущее состояние КА
+            before_state = new_state  # Обновляем предыдущее состояние КА
 
         if len(buffer) != 0:
             free_cof = float(buffer)
@@ -132,30 +139,38 @@ class Parser:
         else:
             raise ParserException(Parser.__EXCEPTIONS["UF"])  # Формула не закончена, вызываем ошибку
 
-    """
-    Проверочный метод, содержит ли строка граничные знаки
-    """
     @staticmethod
     def __is_contains_borders(str_func):
+        """
+        Проверочный метод, содержит ли строка граничный знак
+        :param str_func: Функция в виде строки
+        :return: True — строка содержит граничный знак / False — не содержит
+        """
         for border in Parser.__BORDERS:
             if border in str_func:
                 return True
         return False
 
-    """
-    Возвращает разделённую строку по граничному знаку
-    """
     @staticmethod
     def __split_formula(str_func):
+        """
+        Делит строку по граничному знаку ('>', '<', '>=', '<=', '=')
+        :param str_func: Функция в виде строки
+        :return: Левая часть функции, правая часть функции, разделяющий знак
+        """
         for border in Parser.__BORDERS:
             if border in str_func:
                 return str_func.split(border)[0], str_func.split(border)[1], border
 
-    """
-    Проверяем вводим ли мы число
-    """
     @staticmethod
     def __is_input_number(old_state, new_state):
+        """
+        Проверка на необходимость записать текущий символ в буффер
+        * Это происходит только при запоминании чисел
+        :param old_state: Предыдущее состояние
+        :param new_state: Новое состояние
+        :return: True — записать символ в буффер / False — не записывать число в буффер
+        """
         if old_state == new_state \
                 or old_state < 4 and new_state < 4 \
                 or old_state == 5 and new_state == 6:
@@ -164,6 +179,13 @@ class Parser:
 
     @staticmethod
     def __resolve_to_float(str_num):
+        """
+        Перевод строки в число
+        Если на вход придёт строка, содержащая только знак "+" или "-",
+        то вернуться соотвественно "+1" и "-1"
+        :param str_num: Число в виде строки
+        :return: Число float
+        """
         if str_num == "-":
             return -1
         elif str_num == "+":
