@@ -97,7 +97,7 @@ class Parser:
         before_state = 0  # Предыдущее состояние
         new_state = 0  # Следующее состояние
 
-        cof_array = [0 in range(len(const_count))]  # Массив коэффициентов
+        cof_array = [0 for _ in range(const_count)]  # Массив коэффициентов
         free_cof = None  # Свободный коэффициент
 
         buffer = None  # Буффер для значений
@@ -112,32 +112,76 @@ class Parser:
                 if new_state == "US":  # Если мы перешли в неправильное состояние, выдаём ошибку
                     raise ParserException(Parser.__EXCEPTIONS["US"].format(current_char))
 
-                # Если мы записывали всё это время число
-                if Parser.__is_input_number(before_state, new_state):
+                # Если нужно запомнить текущий символ в буффер
+                if Parser.__is_need_to_save_char(before_state, new_state):
                     buffer = current_char if buffer is None else (buffer + current_char)
 
-                # Если мы наткнулись на 'x'
-                elif new_state == 5:
+                # Если нужно записать коэффициент в буффер
+                elif Parser.__is_need_update_cof_buffer(before_state, new_state):
                     buffered_cof = Parser.__resolve_to_float(buffer)
                     buffer = None
 
-                # Если мы ввели номер икса
-                elif before_state == 6 and new_state == 0:
-                    cof_array[int(buffer)] = buffered_cof
+                # Если нужно записать коэффициент в массив
+                elif Parser.__is_needed_to_save_cof(before_state, new_state):
+                    cof_array[int(buffer) - 1] = buffered_cof
                     buffered_cof = None
-                    buffer = None
+                    buffer = current_char
             else:
                 raise ParserException(Parser.__EXCEPTIONS["UC"].format(current_char))  # Иначе вызываем ошибку
 
             before_state = new_state  # Обновляем предыдущее состояние КА
 
-        if len(buffer) != 0:
-            free_cof = float(buffer)
+        if len(buffer) != 0 and buffered_cof is not None:
+            cof_array[int(buffer) - 1] = buffered_cof
+        elif len(buffer) != 0 and buffered_cof is None:
+            try:
+                free_cof = float(buffer)
+            except ValueError:
+                raise ParserException(Parser.__EXCEPTIONS["UF"])  # Формула не закончена, вызываем ошибку
 
         if Parser.__STATES[before_state][Parser.__SYMBOLS[None]] == Parser.__END_OF_PARSING:  # Если мы вышли из КА
             return cof_array, free_cof
         else:
             raise ParserException(Parser.__EXCEPTIONS["UF"])  # Формула не закончена, вызываем ошибку
+
+    @staticmethod
+    def __is_needed_to_save_cof(old_state, new_state):
+        """
+        Проверка на необходимость обнулить буфер
+        :param old_state:
+        :param new_state:
+        :return:
+        """
+        if old_state == 6 and new_state == 0:
+            return True
+        return False
+
+    @staticmethod
+    def __is_need_update_cof_buffer(old_state, new_state):
+        """
+        Проверка на необходимость записать значение из буфера в буфер коэфициентов
+        :param old_state: Предыдущее состояние
+        :param new_state: Новое состояние
+        :return: True — обновить буфер / False — не обновлять буфер
+        """
+        if (old_state == 2 and (new_state == 4 or new_state == 5)) or (old_state < 2 and new_state == 5):
+            return True
+        return False
+
+    @staticmethod
+    def __is_need_to_save_char(old_state, new_state):
+        """
+        Проверка на необходимость записать текущий символ в буффер
+        * Это происходит только при запоминании чисел
+        :param old_state: Предыдущее состояние
+        :param new_state: Новое состояние
+        :return: True — записать символ в буффер / False — не записывать число в буффер
+        """
+        if old_state == new_state \
+                or old_state < 4 and new_state < 4 \
+                or old_state == 5 and new_state == 6:
+            return True
+        return False
 
     @staticmethod
     def __is_contains_borders(str_func):
@@ -163,21 +207,6 @@ class Parser:
                 return str_func.split(border)[0], str_func.split(border)[1], border
 
     @staticmethod
-    def __is_input_number(old_state, new_state):
-        """
-        Проверка на необходимость записать текущий символ в буффер
-        * Это происходит только при запоминании чисел
-        :param old_state: Предыдущее состояние
-        :param new_state: Новое состояние
-        :return: True — записать символ в буффер / False — не записывать число в буффер
-        """
-        if old_state == new_state \
-                or old_state < 4 and new_state < 4 \
-                or old_state == 5 and new_state == 6:
-            return True
-        return False
-
-    @staticmethod
     def __resolve_to_float(str_num):
         """
         Перевод строки в число
@@ -186,6 +215,8 @@ class Parser:
         :param str_num: Число в виде строки
         :return: Число float
         """
+        if str_num is None:
+            return 1
         if str_num == "-":
             return -1
         elif str_num == "+":
