@@ -11,7 +11,7 @@ class Parser:
     __MORE_OR_EQUAL = ">="
 
     # Лист всех границ
-    __BORDERS = [__LESS, __LESS_OR_EQUAL, __EQUAL, __MORE, __MORE_OR_EQUAL]
+    __BORDERS = [__LESS_OR_EQUAL, __MORE_OR_EQUAL, __LESS, __EQUAL, __MORE]
 
     # Map для всех символов и их порядкого номера в КА
     __SYMBOLS = {
