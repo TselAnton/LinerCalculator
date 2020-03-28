@@ -4,14 +4,14 @@ class Parser:
     :author Kuvshinova Evgenia
     """
     # Константы границ
-    __LESS = "<"
-    __LESS_OR_EQUAL = "<="
-    __EQUAL = "="
-    __MORE = ">"
-    __MORE_OR_EQUAL = ">="
+    LESS = "<"
+    LESS_OR_EQUAL = "<="
+    EQUAL = "="
+    MORE = ">"
+    MORE_OR_EQUAL = ">="
 
     # Лист всех границ
-    __BORDERS = [__LESS_OR_EQUAL, __MORE_OR_EQUAL, __LESS, __EQUAL, __MORE]
+    __BORDERS = [LESS_OR_EQUAL, MORE_OR_EQUAL, LESS, EQUAL, MORE]
 
     # Map для всех символов и их порядкого номера в КА
     __SYMBOLS = {
