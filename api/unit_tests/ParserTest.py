@@ -29,7 +29,7 @@ class ParserTest(unittest.TestCase):
 
     def test_max_arg_num(self):
         functions = ["-3x1 + x2 + 4x3", "-x2 + x3 + x4 = 1", "-5x1 + x2 + x3 = 2", "-8x1 + x2 + 2x3 - x5 = 3"]
-        self.assertTrue(5, Parser.find_max_constant(functions))
+        self.assertEqual(5, Parser.find_max_constant(functions))
 
     def test_bound_BCE_Exception(self):
         with self.assertRaises(ParserException):

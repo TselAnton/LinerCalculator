@@ -90,6 +90,12 @@ class Parser:
 
     @staticmethod
     def find_max_constant(func_array):
+        """
+        Парсит целевую функцию и все ограничения, для нахождения
+        наибольшего номера X
+        :param func_array: Массив с целевой функцией и всех ограничений
+        :return: Номер наибольшего X
+        """
         pattern = "x\\d+"
         max_num = 0
 

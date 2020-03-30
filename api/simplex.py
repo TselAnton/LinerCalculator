@@ -8,15 +8,18 @@ class SimplexMethodSolver:
     """
 
     @staticmethod
-    def find_solution(num_of_const, optimal_model, function, bounds_array):
+    def find_solution(function, bounds_array, optimal_model=True):
         """
         Поиск решения симплек-методом
-        :param num_of_const: Количество переменных
         :param optimal_model: True — MAX / False — MIN
         :param function: Функция
         :param bounds_array: Условия
         :return: Решение симплекс-методом
         """
+        max_num_of_func = Parser.find_max_constant(function)
+        max_num_of_bounds = Parser.find_max_constant(bounds_array)
+        num_of_const = max_num_of_func if max_num_of_func > max_num_of_bounds else max_num_of_bounds
+
         x = [LpVariable("x" + str(i + 1), lowBound=0) for i in range(num_of_const)]
         problem = LpProblem("0", LpMaximize) if optimal_model else LpProblem("0", LpMinimize)
 
