@@ -1,3 +1,5 @@
+import re
+
 class Parser:
     """
     Парсер входных функций
@@ -85,6 +87,18 @@ class Parser:
         """
         str_func = str_func.replace(" ", "")
         return Parser.__parse_side_of_function(str_func, const_count)
+
+    @staticmethod
+    def find_max_constant(func_array):
+        pattern = "x\\d+"
+        max_num = 0
+
+        for str_func in func_array:
+            for num in re.findall(pattern, str_func):
+                if int(num[1:]) > max_num:
+                    max_num = int(num[1:])
+
+        return max_num
 
     @staticmethod
     def __parse_side_of_function(str_func, const_count):
