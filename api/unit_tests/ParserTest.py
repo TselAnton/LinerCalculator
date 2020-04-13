@@ -1,6 +1,6 @@
 import unittest
 
-from api.parser import Parser, ParserException
+from api.Parser import Parser, ParserException
 
 
 class ParserTest(unittest.TestCase):

@@ -1,5 +1,5 @@
 from pulp import LpVariable, LpProblem, LpMaximize, LpMinimize, value
-from api.parser import Parser
+from api.Parser import Parser
 
 
 class SimplexMethodSolver:
@@ -63,5 +63,4 @@ class SimplexMethodSolver:
                         0 if free_arr[1] is None else free_arr[1])
 
         problem.solve()
-        return [[var.varValue for var in problem.variables()], value(problem.objective)]
-
+        return [value(problem.objective), [var.varValue for var in problem.variables()]]
