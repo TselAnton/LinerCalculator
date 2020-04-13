@@ -1,12 +1,13 @@
-from api.parser import ParserException, Parser
-from api.simplex import SimplexMethodSolver
+from api.BranchAndBorderMethod import BranchAndBorderMethod
 
-fun = "-3x1 + x2 + 4x3"
-b1 = "-x2 + x3 + x4 = 1"
-b2 = "-5x1 + x2 + x3 = 2"
-b3 = "-8x1 + x2 + 2x3 - x5 = 3"
+fun = "3x1 + 5x2"
+b1 = "5x1 + 2x2 <= 14"
+b2 = "2x1 + 5x2 <= 16"
+b3 = "x1 >= 1"
+b4 = "x2 >= 1"
+isMax = True
 
-try:
-    print(SimplexMethodSolver.find_solution(fun, [b1, b2, b3], True))
-except ParserException as ex:
-    print(ex.get_message())
+#TODO: Не поддерживаются символы '>' и '<'
+#TODO: НЕ правильно считается значение целевой функции
+
+print(BranchAndBorderMethod.find_solution(fun, [b1, b2, b3, b4], isMax))

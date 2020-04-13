@@ -8,7 +8,7 @@ class SimplexMethodSolver:
     """
 
     @staticmethod
-    def find_solution(function, bounds_array, optimal_model=True):
+    def find_solution(function, bounds_array, optimal_model):
         """
         Поиск решения симплек-методом
         :param optimal_model: True — MAX / False — MIN
@@ -63,4 +63,4 @@ class SimplexMethodSolver:
                         0 if free_arr[1] is None else free_arr[1])
 
         problem.solve()
-        return [value(problem.objective), [var.varValue for var in problem.variables()]]
+        return value(problem.objective), [var.varValue for var in problem.variables()]
