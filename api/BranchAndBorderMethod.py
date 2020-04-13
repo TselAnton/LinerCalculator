@@ -93,7 +93,7 @@ class BranchAndBorderMethod:
 
     @staticmethod
     def find_min(root):
-        nods_array = [BranchAndBorderMethod.__get_all_nodes(root, [])]
+        nods_array = BranchAndBorderMethod.__get_all_nodes(root)
         min_value = float("inf")
         variables = None
 
