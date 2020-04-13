@@ -31,22 +31,10 @@ class SimplexMethodSolver:
         for bound in bounds_array:
             cof_arr, free_arr, border = Parser.parse_function_with_borders(bound, num_of_const)
 
-            if border == Parser.MORE:
-                problem += \
-                    sum([cof_arr[0][i] * x[i] for i in range(num_of_const)]) + (
-                        0 if free_arr[0] is None else free_arr[0]) > \
-                    sum([cof_arr[1][i] * x[i] for i in range(num_of_const)]) + (
-                        0 if free_arr[1] is None else free_arr[1])
-            elif border == Parser.MORE_OR_EQUAL:
+            if border == Parser.MORE_OR_EQUAL:
                 problem += \
                     sum([cof_arr[0][i] * x[i] for i in range(num_of_const)]) + (
                         0 if free_arr[0] is None else free_arr[0]) >= \
-                    sum([cof_arr[1][i] * x[i] for i in range(num_of_const)]) + (
-                        0 if free_arr[1] is None else free_arr[1])
-            elif border == Parser.LESS:
-                problem += \
-                    sum([cof_arr[0][i] * x[i] for i in range(num_of_const)]) + (
-                        0 if free_arr[0] is None else free_arr[0]) < \
                     sum([cof_arr[1][i] * x[i] for i in range(num_of_const)]) + (
                         0 if free_arr[1] is None else free_arr[1])
             elif border == Parser.LESS_OR_EQUAL:
