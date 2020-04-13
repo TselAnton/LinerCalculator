@@ -7,14 +7,12 @@ class Parser:
     :author Kuvshinova Evgenia
     """
     # Константы границ
-    LESS = "<"
     LESS_OR_EQUAL = "<="
     EQUAL = "="
-    MORE = ">"
     MORE_OR_EQUAL = ">="
 
     # Лист всех границ
-    __BORDERS = [LESS_OR_EQUAL, MORE_OR_EQUAL, LESS, EQUAL, MORE]
+    __BORDERS = [LESS_OR_EQUAL, MORE_OR_EQUAL, EQUAL]
 
     # Map для всех символов и их порядкого номера в КА
     __SYMBOLS = {
@@ -30,10 +28,10 @@ class Parser:
     # UC - Unknown character (Неизвестный символ)
     # BCE — No boundary conditions (Отсутсвуют граничные условия)
     __EXCEPTIONS = {
-        "US": "Неожиданный символ '{}'",
+        "US": "Неожиданный символ '{}'!",
         "UF": "Формула не закночена!",
-        "UC": "Неизвестный символ '{}'",
-        "BCE": "Отсутсвуют граничные условия"
+        "UC": "Неизвестный символ '{}'!",
+        "BCE": "Отсутсвуют граничные условия или неверный разделитель!"
     }
 
     # Переменная окончания парсинга
