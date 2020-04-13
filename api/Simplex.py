@@ -51,4 +51,5 @@ class SimplexMethodSolver:
                         0 if free_arr[1] is None else free_arr[1])
 
         problem.solve()
-        return value(problem.objective), [var.varValue for var in problem.variables()]
+        variables = [var.varValue for var in problem.variables()]
+        return sum([fun_cof[i] * variables[i] for i in range(len(fun_cof))]), variables
