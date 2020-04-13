@@ -53,17 +53,18 @@ class BranchAndBorderMethod:
 
         if node.level < max_depth:
             if float_num != -1:
-                left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value,
-                                                                                    float_num)  # Создаём доп ограничения
-                node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(),
-                              node.level + 1)  # Создаём левый узел с дополнительным ограничением
-                node.set_right(node.get_bounds(), right_bound, node.get_function(), node.get_model(),
-                               node.level + 1)  # Создаём правый узел с дополнительным ограничением
+                # Создаём доп ограничения
+                left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value, float_num)
+
+                # Создаём левый узел с дополнительным ограничением
+                node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(), node.level + 1)
+
+                # Создаём правый узел с дополнительным ограничением
+                node.set_right(
+                    node.get_bounds(), right_bound, node.get_function(), node.get_model(), node.level + 1)
 
                 BranchAndBorderMethod.__recount_node(node.get_left(), max_depth)
                 BranchAndBorderMethod.__recount_node(node.get_right(), max_depth)
-
-        print("Образовалась нода: ", node.__str__())
 
         return node
 
