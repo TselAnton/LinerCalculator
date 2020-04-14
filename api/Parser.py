@@ -85,7 +85,8 @@ class Parser:
         :return: Вектор коэффициентов, свободный член
         """
         str_func = str_func.replace(" ", "")
-        return Parser.__parse_side_of_function(str_func, const_count)
+        fun_cof, fun_free = Parser.__parse_side_of_function(str_func, const_count)
+        return fun_cof
 
     @staticmethod
     def find_max_constant(func_array):

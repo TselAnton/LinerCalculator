@@ -23,8 +23,6 @@ class ParserTest(unittest.TestCase):
         self.check_parser_with_borders("1*x1+2*x2+3*x3 <= 100", 3, [1, 2, 3], None, [0, 0, 0], 100, "<=")
         self.check_parser_with_borders("-1*x1-2*x2-3*x3 >= -100", 3, [-1, -2, -3], None, [0, 0, 0], -100, ">=")
         self.check_parser_with_borders("-x1-x2-x3 = -x1-x2-x3", 3, [-1, -1, -1], None, [-1, -1, -1], None, "=")
-        self.check_parser_with_borders("-x1 < -3", 1, [-1], None, [0], -3, "<")
-        self.check_parser_with_borders("-3 > -x1", 1, [0], -3, [-1], None, ">")
         self.check_parser_with_borders("-3>  =-x1", 1, [0], -3, [-1], None, ">=")
 
     def test_max_arg_num(self):
@@ -48,8 +46,7 @@ class ParserTest(unittest.TestCase):
             Parser.parse_alone_function("k1+x1", 1)
 
     def check_parser_with_main_function(self, str_fun, num_of_cof, expected_array_cof, expected_free_cof):
-        cof_array, free_cof = Parser.parse_alone_function(str_fun, num_of_cof)
-        self.assertEqual(expected_free_cof, free_cof)
+        cof_array = Parser.parse_alone_function(str_fun, num_of_cof)
         self.assertEqual(expected_array_cof, cof_array)
 
     def check_parser_with_borders(self, str_fun, num_of_cof, exp_left_cof,

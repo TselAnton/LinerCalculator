@@ -5,7 +5,7 @@ from api.Simplex import SimplexMethodSolver
 
 class SimplexTest(unittest.TestCase):
 
-    def test_right_simlex_resolver_work_1(self):
+    def test_right_simplex_resolver_work_1(self):
         func = "3x1 + 2x2 + x3"
         method = False
         bounds = [
@@ -14,18 +14,18 @@ class SimplexTest(unittest.TestCase):
             "2x1 - x2 + 2x3 >= 2"
         ]
 
-        result = SimplexMethodSolver.__find_solution(func, bounds, method)
-        self.assertEqual([0.0, 0.0, 4.0], result)
+        result, values = SimplexMethodSolver.find_solution(func, bounds, method)
+        self.assertEqual([0.0, 0.0, 4.0], values)
 
-    def test_right_simlex_resolver_work_2(self):
-        func = "2x1 + 3x2 - x4"
+    def test_right_simplex_resolver_work_2(self):
+        func = "11x1 + 5x2 + 4x3"
         method = True
         bounds = [
-            "2x1 - x2 - 2x4 + x5 = 16",
-            "3x1 + 2x2 + x3 - 3x4 = 18",
-            "-x1 + 3x2 + 4x4 + x6 = 24"
+            "3x1 + 2x2 + 8x3 >= 11",
+            "2x1 + x3 <= 5",
+            "3x1 + 3x2 + x3 <= 13",
+            "x1>=3.0"
         ]
 
-        result = SimplexMethodSolver.__find_solution(func, bounds, method)
-        print(result)
-        self.assertEqual([0.54545455, 8.1818182, 0.0, 0.0, 23.090909, 0.0], result)
+        result, values = SimplexMethodSolver.find_solution(func, bounds, method)
+        self.assertIsNone(result)

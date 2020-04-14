@@ -9,9 +9,10 @@ class BranchAndBorderMethod:
     """
 
     @staticmethod
-    def find_solution(function, bounds_array, optimal_model, max_depth=5, is_multiple_threads=False):
+    def find_solution(function, bounds_array, optimal_model, expect_nulls=False, max_depth=5, is_multiple_threads=False):
         """
         Поиск решения
+        :param expect_nulls: Параметры который говорит, ожидаем ли мы нулевые значения
         :param max_depth: Максимальное количество слоёв дерева
         :param function: Целевая функция
         :param bounds_array: Ограничения
@@ -21,13 +22,13 @@ class BranchAndBorderMethod:
         """
         if is_multiple_threads is False:
             return BranchAndBorderMethod \
-                .__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth)
+                .__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth, expect_nulls)
         else:
             # TODO: Многопоточка
             pass
 
     @staticmethod
-    def __find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth):
+    def __find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth, expect_nulls):
         """
         Поиск решения в одиночном потоке
         :param function: Целевая функция
@@ -38,7 +39,8 @@ class BranchAndBorderMethod:
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
         tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)  # Строим дерево
 
-        return BranchAndBorderMethod.find_max(tree) if optimal_model else BranchAndBorderMethod.find_min(tree)
+        return BranchAndBorderMethod.find_max(tree, expect_nulls) \
+            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls)
 
     @staticmethod
     def __recount_node(node, max_depth):
@@ -55,7 +57,7 @@ class BranchAndBorderMethod:
 
         print(node.__str__())
 
-        if node.level < max_depth:
+        if node.level < max_depth and result is not None:
             if float_num != -1:
                 # Создаём доп ограничения
                 left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value, float_num, node)
@@ -126,43 +128,45 @@ class BranchAndBorderMethod:
         return bound
 
     @staticmethod
-    def find_min(root):
+    def find_min(root, expect_nulls):
         """
         Поиск наименьшего решения
+        :param expect_nulls: Параметр ожидания нулевых значений
         :param root: Корневой узел
         :return: Наименьшее решение
         """
-        nods_array = BranchAndBorderMethod.__get_all_nodes(root)
+        nods_array = BranchAndBorderMethod.__get_all_nodes(root, expect_nulls)
         min_value = float("inf")
         variables = None
 
         for node in nods_array:
-            if node.result < min_value:
+            if node.result is not None and node.result < min_value:
                 min_value = node.result
                 variables = node.variables
 
         return min_value, variables
 
     @staticmethod
-    def find_max(root):
+    def find_max(root, expect_nulls):
         """
         Поиск наибольшего решения
+        :param expect_nulls: Параметр ожидания нулевых значений
         :param root: Корневой узел
         :return: Наибольшее решение
         """
-        nods_array = BranchAndBorderMethod.__get_all_nodes(root)
+        nods_array = BranchAndBorderMethod.__get_all_nodes(root, expect_nulls)
         min_value = float("-inf")
         variables = None
 
         for node in nods_array:
-            if node.result > min_value:
+            if node.result is not None and node.result > min_value:
                 min_value = node.result
                 variables = node.variables
 
         return min_value, variables
 
     @staticmethod
-    def __get_all_nodes(node, result=None):
+    def __get_all_nodes(node, expect_nulls, result=None):
         """
         Получение всех узлов, которые содержат решение
         :param node: Узел
@@ -171,13 +175,13 @@ class BranchAndBorderMethod:
         """
         result = [] if result is None else result
         if BranchAndBorderMethod.__get_not_integer_var(node.variables)[0] == -1 \
-                and not BranchAndBorderMethod.__is_contains_nulls(node.variables):
+                and (not expect_nulls or not BranchAndBorderMethod.__is_contains_nulls(node.variables)):
             result.append(node)
 
         if node.get_left() is not None:
-            BranchAndBorderMethod.__get_all_nodes(node.get_left(), result)
+            BranchAndBorderMethod.__get_all_nodes(node.get_left(), expect_nulls, result)
         if node.get_right() is not None:
-            BranchAndBorderMethod.__get_all_nodes(node.get_right(), result)
+            BranchAndBorderMethod.__get_all_nodes(node.get_right(), expect_nulls, result)
 
         return result
 
@@ -229,14 +233,3 @@ class Node:
                + ", borders = " + str(self.bound_array) \
                + "]"
 
-    # + ", left = " + str(self.left is not None) \
-    # + ", right = " + str(self.right is not None) \
-
-    # def __str__(self):
-    #     return "Node [fun = " + str(self.function) \
-    #            + ", borders = " + str(self.bound_array) \
-    #            + ", result = " + str(self.result) \
-    #            + ", vars = " + str(self.variables) \
-    #            + ", level = " + str(self.level) \
-    #            + ", left = " + str(self.left) \
-    #            + ", right = " + str(self.right) + "]"
