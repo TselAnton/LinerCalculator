@@ -20,7 +20,7 @@ class BranchAndBorderMethod:
         :return:
         """
         if is_multiple_threads is False:
-            return BranchAndBorderMethod\
+            return BranchAndBorderMethod \
                 .__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth)
         else:
             # TODO: Многопоточка
@@ -36,7 +36,7 @@ class BranchAndBorderMethod:
         :return: Результат, коэффициенты xn
         """
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
-        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)   # Строим дерево
+        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)  # Строим дерево
 
         return BranchAndBorderMethod.find_max(tree) if optimal_model else BranchAndBorderMethod.find_min(tree)
 
@@ -53,20 +53,22 @@ class BranchAndBorderMethod:
 
         float_value, float_num = BranchAndBorderMethod.__get_not_integer_var(variables)  # Находим дробное значение
 
+        print(node.__str__())
+
         if node.level < max_depth:
             if float_num != -1:
                 # Создаём доп ограничения
-                left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value, float_num)
+                left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value, float_num, node)
 
-                # Создаём левый узел с дополнительным ограничением
-                node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(), node.level + 1)
+                if left_bound is not None:
+                    # Создаём левый узел с дополнительным ограничением
+                    node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(), node.level + 1)
+                    BranchAndBorderMethod.__recount_node(node.get_left(), max_depth)
 
-                # Создаём правый узел с дополнительным ограничением
-                node.set_right(
-                    node.get_bounds(), right_bound, node.get_function(), node.get_model(), node.level + 1)
-
-                BranchAndBorderMethod.__recount_node(node.get_left(), max_depth)
-                BranchAndBorderMethod.__recount_node(node.get_right(), max_depth)
+                if right_bound is not None:
+                    # Создаём правый узел с дополнительным ограничением
+                    node.set_right(node.get_bounds(), right_bound, node.get_function(), node.get_model(), node.level + 1)
+                    BranchAndBorderMethod.__recount_node(node.get_right(), max_depth)
 
         return node
 
@@ -92,7 +94,7 @@ class BranchAndBorderMethod:
         return sum([1.0 if v == 0 else 0.0 for v in variables]) > 0
 
     @staticmethod
-    def __create_new_bounds(value, num_of_x):
+    def __create_new_bounds(value, num_of_x, node):
         """
         Создание дополнительных ограничений
         :param num_of_x: Номер x
@@ -100,7 +102,28 @@ class BranchAndBorderMethod:
         :return: Границы для левого и правого узла дерева
         """
         int_val = math.modf(value)[1]
-        return str("x" + str(num_of_x) + ">=" + str(int_val + 1)), str("x" + str(num_of_x) + "<=" + str(int_val))
+        left_bound = str("x" + str(num_of_x) + ">=" + str(int_val + 1))
+        right_bound = str("x" + str(num_of_x) + "<=" + str(int_val))
+
+        return BranchAndBorderMethod.__get_not_equal_bound(left_bound, node.bound_array), \
+               BranchAndBorderMethod.__get_not_equal_bound(right_bound, node.bound_array)
+
+    @staticmethod
+    def __get_not_equal_bound(bound, bounds_array):
+        """
+        Вернуть уникальную границу
+        :param bound: Новая граница
+        :param bounds_array: Существующие границы
+        :return: bound, если она уникальна, иначе None
+        """
+        if bounds_array.count(bound) > 0:
+            return None
+
+        sub_str = bound[:bound.find("=") - 1]
+        for b in bounds_array:
+            if (sub_str + ">=") in b or (sub_str + "<=") in b:
+                return None
+        return bound
 
     @staticmethod
     def find_min(root):
@@ -201,9 +224,13 @@ class Node:
         return self.optimal_model
 
     def __str__(self):
-        return "Node [result = " + str(self.result) + ", vars = " + str(self.variables) + ", level = " \
-               + str(self.level) + ", left = " + str(self.left is not None) \
-               + ", right = " + str(self.right is not None) + "]"
+        return "Node [result = " + str(self.result) + ", vars = " + str(self.variables) \
+               + ", level = " + str(self.level) \
+               + ", borders = " + str(self.bound_array) \
+               + "]"
+
+    # + ", left = " + str(self.left is not None) \
+    # + ", right = " + str(self.right is not None) \
 
     # def __str__(self):
     #     return "Node [fun = " + str(self.function) \
