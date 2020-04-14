@@ -1,5 +1,3 @@
-import math
-
 from pulp import LpVariable, LpProblem, LpMaximize, LpMinimize, value
 from api.Parser import Parser
 
