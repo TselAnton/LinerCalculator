@@ -1,4 +1,6 @@
 import math
+import time
+from threading import Thread
 
 from api.Simplex import SimplexMethodSolver as simplex
 
@@ -9,7 +11,7 @@ class BranchAndBorderMethod:
     """
 
     @staticmethod
-    def find_solution(function, bounds_array, optimal_model, expect_nulls=False, max_depth=5, is_multiple_threads=False):
+    def find_solution(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=5):
         """
         Поиск решения
         :param expect_nulls: Параметры который говорит, ожидаем ли мы нулевые значения
@@ -24,8 +26,30 @@ class BranchAndBorderMethod:
             return BranchAndBorderMethod \
                 .__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth, expect_nulls)
         else:
-            # TODO: Многопоточка
-            pass
+            return BranchAndBorderMethod\
+                .__find_solution_by_multiple_threads(function, bounds_array, optimal_model, max_depth, expect_nulls)
+
+    @staticmethod
+    def __find_solution_by_multiple_threads(function, bounds_array, optimal_model, max_depth, expect_nulls):
+        """
+        Поиск решения в несколько потоков
+        :param function: Целевая функция
+        :param bounds_array: Ограничения
+        :param optimal_model: Оптимальная модель
+        :param max_depth: Максимальная глубина дерева
+        :param expect_nulls: Ожидание нулевых значений
+        :return: Результат, коэффициенты xn, время работы программы
+        """
+        start_timer = time.time()
+        tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
+
+        main_thread = NewThread(tree.root, max_depth)
+        main_thread.start()
+        main_thread.join()
+        tree = main_thread.get_result()
+
+        return BranchAndBorderMethod.find_max(tree, expect_nulls) \
+            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls), time.time() - start_timer
 
     @staticmethod
     def __find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth, expect_nulls):
@@ -34,18 +58,22 @@ class BranchAndBorderMethod:
         :param function: Целевая функция
         :param bounds_array: Ограничения
         :param optimal_model: Оптимальная модель
-        :return: Результат, коэффициенты xn
+        :param max_depth: Максимальная глубина дерева
+        :param expect_nulls: Ожидание нулевых значений
+        :return: Результат, коэффициенты xn, время работы программы
         """
+        start_timer = time.time()
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
-        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)  # Строим дерево
+        tree = BranchAndBorderMethod.recount_node(tree.root, max_depth)  # Строим дерево
 
         return BranchAndBorderMethod.find_max(tree, expect_nulls) \
-            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls)
+            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls), time.time() - start_timer
 
     @staticmethod
-    def __recount_node(node, max_depth):
+    def recount_node(node, max_depth):
         """
         Пересчитать значение в узле
+        :param max_depth: Максимальная глубина дерева
         :param node: Узел дерева
         :return: Дерево решений
         """
@@ -53,29 +81,27 @@ class BranchAndBorderMethod:
         result, variables = simplex.find_solution(node.get_function(), node.get_bounds(), node.get_model())
         node.set_results(result, variables)  # Задаём текущему узлу получившиеся значения
 
-        float_value, float_num = BranchAndBorderMethod.__get_not_integer_var(variables)  # Находим дробное значение
-
-        print(node.__str__())
+        float_value, float_num = BranchAndBorderMethod.get_not_integer_var(variables)  # Находим дробное значение
 
         if node.level < max_depth and result is not None:
             if float_num != -1:
                 # Создаём доп ограничения
-                left_bound, right_bound = BranchAndBorderMethod.__create_new_bounds(float_value, float_num, node)
+                left_bound, right_bound = BranchAndBorderMethod.create_new_bounds(float_value, float_num, node)
 
                 if left_bound is not None:
                     # Создаём левый узел с дополнительным ограничением
                     node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(), node.level + 1)
-                    BranchAndBorderMethod.__recount_node(node.get_left(), max_depth)
+                    BranchAndBorderMethod.recount_node(node.get_left(), max_depth)
 
                 if right_bound is not None:
                     # Создаём правый узел с дополнительным ограничением
                     node.set_right(node.get_bounds(), right_bound, node.get_function(), node.get_model(), node.level + 1)
-                    BranchAndBorderMethod.__recount_node(node.get_right(), max_depth)
+                    BranchAndBorderMethod.recount_node(node.get_right(), max_depth)
 
         return node
 
     @staticmethod
-    def __get_not_integer_var(variables):
+    def get_not_integer_var(variables):
         """
         Поиск не целого числа из списка всех полученных значений xn
         :param variables: Массив значений xn
@@ -96,7 +122,7 @@ class BranchAndBorderMethod:
         return sum([1.0 if v == 0 else 0.0 for v in variables]) > 0
 
     @staticmethod
-    def __create_new_bounds(value, num_of_x, node):
+    def create_new_bounds(value, num_of_x, node):
         """
         Создание дополнительных ограничений
         :param num_of_x: Номер x
@@ -174,7 +200,7 @@ class BranchAndBorderMethod:
         :return: Массив всех узлов решений
         """
         result = [] if result is None else result
-        if BranchAndBorderMethod.__get_not_integer_var(node.variables)[0] == -1 \
+        if BranchAndBorderMethod.get_not_integer_var(node.variables)[0] == -1 \
                 and (not expect_nulls or not BranchAndBorderMethod.__is_contains_nulls(node.variables)):
             result.append(node)
 
@@ -184,6 +210,56 @@ class BranchAndBorderMethod:
             BranchAndBorderMethod.__get_all_nodes(node.get_right(), expect_nulls, result)
 
         return result
+
+
+class NewThread(Thread):
+    """
+    Поток выполнения
+    """
+    def __init__(self, node, max_depth):
+        Thread.__init__(self)
+        self.name = "Thread [Level = " + str(node.level) + ", borders = " + str(node.bound_array) + "]"
+        self.node = node
+        self.max_depth = max_depth
+
+    def run(self):
+        """
+        Функция расчёта значения узла
+        """
+
+        # Ищем решение
+        result, variables = simplex.find_solution(self.node.get_function(), self.node.get_bounds(), self.node.get_model())
+        self.node.set_results(result, variables)  # Задаём текущему узлу получившиеся значения
+
+        float_value, float_num = BranchAndBorderMethod.get_not_integer_var(variables)  # Находим дробное значение
+
+        if self.node.level < self.max_depth and result is not None:
+            if float_num != -1:
+                # Создаём доп ограничения
+                left_bound, right_bound = BranchAndBorderMethod.create_new_bounds(float_value, float_num, self.node)
+
+                if left_bound is not None:
+                    # Создаём левый узел с дополнительным ограничением
+                    self.node.set_left(self.node.get_bounds(), left_bound, self.node.get_function(),
+                                       self.node.get_model(), self.node.level + 1)
+
+                    left_thread = NewThread(self.node.get_left(), self.max_depth)
+                    left_thread.start()
+                    left_thread.join()
+
+                    BranchAndBorderMethod.recount_node(self.node.get_left(), self.max_depth)
+
+                if right_bound is not None:
+                    # Создаём правый узел с дополнительным ограничением
+                    self.node.set_right(self.node.get_bounds(), right_bound, self.node.get_function(),
+                                        self.node.get_model(),self.node.level + 1)
+
+                    right_thread = NewThread(self.node.get_right(), self.max_depth)
+                    right_thread.start()
+                    right_thread.join()
+
+    def get_result(self):
+        return self.node
 
 
 class Tree:
