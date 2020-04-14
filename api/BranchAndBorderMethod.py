@@ -93,6 +93,11 @@ class BranchAndBorderMethod:
 
     @staticmethod
     def find_min(root):
+        """
+        Поиск наименьшего решения
+        :param root: Корневой узел
+        :return: Наименьшее решение
+        """
         nods_array = BranchAndBorderMethod.__get_all_nodes(root)
         min_value = float("inf")
         variables = None
@@ -106,6 +111,11 @@ class BranchAndBorderMethod:
 
     @staticmethod
     def find_max(root):
+        """
+        Поиск наибольшего решения
+        :param root: Корневой узел
+        :return: Наибольшее решение
+        """
         nods_array = BranchAndBorderMethod.__get_all_nodes(root)
         min_value = float("-inf")
         variables = None
@@ -119,6 +129,12 @@ class BranchAndBorderMethod:
 
     @staticmethod
     def __get_all_nodes(node, result=None):
+        """
+        Получение всех узлов, которые содержат решение
+        :param node: Узел
+        :param result: Массив всех узлов решений
+        :return: Массив всех узлов решений
+        """
         result = [] if result is None else result
         if BranchAndBorderMethod.__get_not_integer_var(node.variables)[0] == -1:
             result.append(node)
