@@ -20,7 +20,8 @@ class BranchAndBorderMethod:
         :return:
         """
         if is_multiple_threads is False:
-            return BranchAndBorderMethod.__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth)
+            return BranchAndBorderMethod\
+                .__find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth)
         else:
             # TODO: Многопоточка
             pass
@@ -35,7 +36,8 @@ class BranchAndBorderMethod:
         :return: Результат, коэффициенты xn
         """
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
-        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)
+        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)   # Строим дерево
+
         return BranchAndBorderMethod.find_max(tree) if optimal_model else BranchAndBorderMethod.find_min(tree)
 
     @staticmethod
@@ -45,9 +47,9 @@ class BranchAndBorderMethod:
         :param node: Узел дерева
         :return: Дерево решений
         """
-        result, variables = simplex.find_solution(node.get_function(), node.get_bounds(),
-                                                  node.get_model())  # Ищем решение
-        node.set_results(result, variables)  # Задаём текущему узлу получи
+        # Ищем решение
+        result, variables = simplex.find_solution(node.get_function(), node.get_bounds(), node.get_model())
+        node.set_results(result, variables)  # Задаём текущему узлу получившиеся значения
 
         float_value, float_num = BranchAndBorderMethod.__get_not_integer_var(variables)  # Находим дробное значение
 
@@ -79,6 +81,15 @@ class BranchAndBorderMethod:
             if variables[i] > 0 and not variables[i].is_integer():
                 return variables[i], (i + 1)
         return -1, -1
+
+    @staticmethod
+    def __is_contains_nulls(variables):
+        """
+        Содержит ли массив нулевые значения
+        :param variables: Массив значений
+        :return: True - содержит, False - не содержит
+        """
+        return sum([1.0 if v == 0 else 0.0 for v in variables]) > 0
 
     @staticmethod
     def __create_new_bounds(value, num_of_x):
@@ -136,7 +147,8 @@ class BranchAndBorderMethod:
         :return: Массив всех узлов решений
         """
         result = [] if result is None else result
-        if BranchAndBorderMethod.__get_not_integer_var(node.variables)[0] == -1:
+        if BranchAndBorderMethod.__get_not_integer_var(node.variables)[0] == -1 \
+                and not BranchAndBorderMethod.__is_contains_nulls(node.variables):
             result.append(node)
 
         if node.get_left() is not None:
