@@ -11,15 +11,30 @@ class BranchAndBorderMethod:
     """
 
     @staticmethod
-    def find_solution(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=5):
+    def find_solution_with_all_params(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):
+        return BranchAndBorderMethod \
+            .__get_solution(function, bounds_array, optimal_model, is_multiple_threads, expect_nulls, max_depth)
+
+    @staticmethod
+    def find_solution_with_time(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):
+        return BranchAndBorderMethod \
+            .__get_solution(function, bounds_array, optimal_model, is_multiple_threads, expect_nulls, max_depth)[:1]
+
+    @staticmethod
+    def find_solution(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):
+        return BranchAndBorderMethod\
+            .__get_solution(function, bounds_array, optimal_model, is_multiple_threads, expect_nulls, max_depth)[0]
+
+    @staticmethod
+    def __get_solution(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):
         """
         Поиск решения
         :param expect_nulls: Параметры который говорит, ожидаем ли мы нулевые значения
         :param max_depth: Максимальное количество слоёв дерева
         :param function: Целевая функция
         :param bounds_array: Ограничения
-        :param optimal_model:
-        :param is_multiple_threads:
+        :param optimal_model: Оптимальная модель
+        :param is_multiple_threads: Использование нескольких потоков
         :return:
         """
         if is_multiple_threads is False:
@@ -38,7 +53,7 @@ class BranchAndBorderMethod:
         :param optimal_model: Оптимальная модель
         :param max_depth: Максимальная глубина дерева
         :param expect_nulls: Ожидание нулевых значений
-        :return: Результат, коэффициенты xn, время работы программы
+        :return: Результат, коэффициенты xn, время работы программы, максимальная глубина дерева
         """
         start_timer = time.time()
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
@@ -48,8 +63,9 @@ class BranchAndBorderMethod:
         main_thread.join()
         tree = main_thread.get_result()
 
-        return BranchAndBorderMethod.find_max(tree, expect_nulls) \
-            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls), time.time() - start_timer
+        return BranchAndBorderMethod.__find_max(tree, expect_nulls) \
+            if optimal_model else BranchAndBorderMethod.__find_min(tree, expect_nulls), \
+            time.time() - start_timer, BranchAndBorderMethod.__get_max_depth(tree)
 
     @staticmethod
     def __find_solution_by_single_thread(function, bounds_array, optimal_model, max_depth, expect_nulls):
@@ -60,17 +76,18 @@ class BranchAndBorderMethod:
         :param optimal_model: Оптимальная модель
         :param max_depth: Максимальная глубина дерева
         :param expect_nulls: Ожидание нулевых значений
-        :return: Результат, коэффициенты xn, время работы программы
+        :return: Результат, коэффициенты xn, время работы программы, максимальная глубина дерева
         """
         start_timer = time.time()
         tree = Tree(bounds_array, function, optimal_model)  # Создаём древовидную структуру
-        tree = BranchAndBorderMethod.recount_node(tree.root, max_depth)  # Строим дерево
+        tree = BranchAndBorderMethod.__recount_node(tree.root, max_depth)  # Строим дерево
 
-        return BranchAndBorderMethod.find_max(tree, expect_nulls) \
-            if optimal_model else BranchAndBorderMethod.find_min(tree, expect_nulls), time.time() - start_timer
+        return BranchAndBorderMethod.__find_max(tree, expect_nulls) \
+            if optimal_model else BranchAndBorderMethod.__find_min(tree, expect_nulls), \
+            time.time() - start_timer, BranchAndBorderMethod.__get_max_depth(tree)
 
     @staticmethod
-    def recount_node(node, max_depth):
+    def __recount_node(node, max_depth):
         """
         Пересчитать значение в узле
         :param max_depth: Максимальная глубина дерева
@@ -91,12 +108,12 @@ class BranchAndBorderMethod:
                 if left_bound is not None:
                     # Создаём левый узел с дополнительным ограничением
                     node.set_left(node.get_bounds(), left_bound, node.get_function(), node.get_model(), node.level + 1)
-                    BranchAndBorderMethod.recount_node(node.get_left(), max_depth)
+                    BranchAndBorderMethod.__recount_node(node.get_left(), max_depth)
 
                 if right_bound is not None:
                     # Создаём правый узел с дополнительным ограничением
                     node.set_right(node.get_bounds(), right_bound, node.get_function(), node.get_model(), node.level + 1)
-                    BranchAndBorderMethod.recount_node(node.get_right(), max_depth)
+                    BranchAndBorderMethod.__recount_node(node.get_right(), max_depth)
 
         return node
 
@@ -154,14 +171,29 @@ class BranchAndBorderMethod:
         return bound
 
     @staticmethod
-    def find_min(root, expect_nulls):
+    def __get_max_depth(root):
+        """
+        Поиск высоты дерева
+        :param root: Корневой узел
+        :return: Высота дерева
+        """
+        nods_array = BranchAndBorderMethod.__get_all_nodes(root)
+        max_depth = 0
+
+        for node in nods_array:
+            if node.level > max_depth:
+                max_depth = node.level
+        return max_depth
+
+    @staticmethod
+    def __find_min(root, expect_nulls):
         """
         Поиск наименьшего решения
         :param expect_nulls: Параметр ожидания нулевых значений
         :param root: Корневой узел
         :return: Наименьшее решение
         """
-        nods_array = BranchAndBorderMethod.__get_all_nodes(root, expect_nulls)
+        nods_array = BranchAndBorderMethod.__get_all_results(root, expect_nulls)
         min_value = float("inf")
         variables = None
 
@@ -173,14 +205,14 @@ class BranchAndBorderMethod:
         return min_value, variables
 
     @staticmethod
-    def find_max(root, expect_nulls):
+    def __find_max(root, expect_nulls):
         """
         Поиск наибольшего решения
         :param expect_nulls: Параметр ожидания нулевых значений
         :param root: Корневой узел
         :return: Наибольшее решение
         """
-        nods_array = BranchAndBorderMethod.__get_all_nodes(root, expect_nulls)
+        nods_array = BranchAndBorderMethod.__get_all_results(root, expect_nulls)
         min_value = float("-inf")
         variables = None
 
@@ -192,7 +224,25 @@ class BranchAndBorderMethod:
         return min_value, variables
 
     @staticmethod
-    def __get_all_nodes(node, expect_nulls, result=None):
+    def __get_all_nodes(node, result=None):
+        """
+        Получение всех узлов
+        :param node: Узел
+        :param result: Массив всех узлов
+        :return: Массив всех узлов
+        """
+        result = [] if result is None else result
+        result.append(node)
+
+        if node.get_left() is not None:
+            BranchAndBorderMethod.__get_all_nodes(node.get_left(), result)
+        if node.get_right() is not None:
+            BranchAndBorderMethod.__get_all_nodes(node.get_right(), result)
+
+        return result
+
+    @staticmethod
+    def __get_all_results(node, expect_nulls, result=None):
         """
         Получение всех узлов, которые содержат решение
         :param node: Узел
@@ -205,9 +255,9 @@ class BranchAndBorderMethod:
             result.append(node)
 
         if node.get_left() is not None:
-            BranchAndBorderMethod.__get_all_nodes(node.get_left(), expect_nulls, result)
+            BranchAndBorderMethod.__get_all_results(node.get_left(), expect_nulls, result)
         if node.get_right() is not None:
-            BranchAndBorderMethod.__get_all_nodes(node.get_right(), expect_nulls, result)
+            BranchAndBorderMethod.__get_all_results(node.get_right(), expect_nulls, result)
 
         return result
 
@@ -247,12 +297,10 @@ class NewThread(Thread):
                     left_thread.start()
                     left_thread.join()
 
-                    BranchAndBorderMethod.recount_node(self.node.get_left(), self.max_depth)
-
                 if right_bound is not None:
                     # Создаём правый узел с дополнительным ограничением
                     self.node.set_right(self.node.get_bounds(), right_bound, self.node.get_function(),
-                                        self.node.get_model(),self.node.level + 1)
+                                        self.node.get_model(), self.node.level + 1)
 
                     right_thread = NewThread(self.node.get_right(), self.max_depth)
                     right_thread.start()
