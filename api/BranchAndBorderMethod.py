@@ -17,8 +17,9 @@ class BranchAndBorderMethod:
 
     @staticmethod
     def find_solution_with_time(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):
-        return BranchAndBorderMethod \
-            .__get_solution(function, bounds_array, optimal_model, is_multiple_threads, expect_nulls, max_depth)[:1]
+        result, work_time, depth = BranchAndBorderMethod \
+            .__get_solution(function, bounds_array, optimal_model, is_multiple_threads, expect_nulls, max_depth)
+        return result, work_time
 
     @staticmethod
     def find_solution(function, bounds_array, optimal_model, is_multiple_threads=False, expect_nulls=False, max_depth=10):

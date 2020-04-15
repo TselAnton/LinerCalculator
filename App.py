@@ -1,18 +1,22 @@
+from api.GeneratorUtils import GeneratorUtils
 from api.BranchAndBorderMethod import BranchAndBorderMethod
 
-fun = "3x1 + 4x2"
-b1 = "x1 + x2 <= 550"
-b2 = "2x1 + 3x2 <= 1200"
-b3 = "12x1 + 30x2 <= 9600"
-isMax = True
 
-#TODO: Генерпция линейных задач
-# Возможно стоит проверять уровень глубины листа-решения, для оценки сгенерированной задачи (либо максимальгую глубину)
+def generate_solution(num_of_args, isMax):
+    is_normal = False
+    while not is_normal:
+        fun, borders = GeneratorUtils.generate_liner_condition(num_of_args)
 
-print(BranchAndBorderMethod.find_solution(fun, [b1, b2, b3], isMax, False))
-print(BranchAndBorderMethod.find_solution_with_time(fun, [b1, b2, b3], isMax, False))
-print(BranchAndBorderMethod.find_solution_with_all_params(fun, [b1, b2, b3], isMax, False))
+        result, time, depth = BranchAndBorderMethod.find_solution_with_all_params(fun, borders, isMax, False, False, num_of_args + 5)
+        if depth >= num_of_args:
+            print("На максимум:")
+            print("Один поток: ", BranchAndBorderMethod.find_solution_with_time(fun, borders, True, False))
+            print("Несколько потоков: ", BranchAndBorderMethod.find_solution_with_time(fun, borders, True, True))
 
-print(BranchAndBorderMethod.find_solution(fun, [b1, b2, b3], isMax, True))
-print(BranchAndBorderMethod.find_solution_with_time(fun, [b1, b2, b3], isMax, True))
-print(BranchAndBorderMethod.find_solution_with_all_params(fun, [b1, b2, b3], isMax, True))
+            print("На минимум:")
+            print("Один поток: ", BranchAndBorderMethod.find_solution_with_time(fun, borders, False, False))
+            print("Несколько потоков: ", BranchAndBorderMethod.find_solution_with_time(fun, borders, False, True))
+            is_normal = True
+
+
+generate_solution(9, True)  # True - max, False - min
